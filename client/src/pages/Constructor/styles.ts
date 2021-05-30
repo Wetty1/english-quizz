@@ -83,7 +83,7 @@ export const AddAlternativeContent = styled.div`
 export const Button = styled.button`
     padding: 15px;
     margin: auto;
-    min-width: 300px;
+    min-width: 100%;
     align-content: center;
     background: linear-gradient(#0f79, #07f9);
     border: none;
