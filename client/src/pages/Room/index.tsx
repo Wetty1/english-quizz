@@ -1,5 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react'
-import Socket from 'socket.io-client';
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import {
     Container,
     Content,
@@ -8,33 +7,37 @@ import {
     ShowQuestion,
 } from './styles'
 
+import { ioRoom as io } from "../../services/socket";
 
 const Room: React.FC = () => {
+    const [title, setTitle] = useState('');
     const [currentPath, setCurrentPath] = useState('');
 
-    // const io = Socket('http://localhost:3001', {
-    //     transports: ['websocket'],
-    // })
-
-    const setPath = useCallback(
-        () => {
-            setCurrentPath('/')
-        },
-        [],
-    )
+    const id_room = document.location.pathname.split('/')[2];
 
     useEffect(() => {
-        // io.emit('connection');
-        // io.emit('joinroom', 'abc')
-        // io.on('success', (msg) => {
-        //     console.log(msg);
-        // })
-    }, [currentPath])
+        console.log(id_room.toString());
+        io.emit('enterOrCreateRoom', id_room.toString());
+        io.on('success', (msg: string) => {
+            console.log(msg);
+        })
+        io.on('title', (msg: string) => {
+            setTitle(msg);
+        })
+    }, [])
+
+    const handleTeste = useCallback(
+        () => {
+            console.log("chamei");
+            io.emit('msgToServer', 'Entrei');
+        },
+        [],
+    );
 
     return (
         <Container>
             <Header>
-                <h1 className="text-title">Room title</h1>
+                <h1 className="text-title">Room {title}</h1>
             </Header>
             <Content>
                 <ShowQuestion>
@@ -42,11 +45,10 @@ const Room: React.FC = () => {
                         Witch is sky color?
                     </h2>
                     <div>
-                        <span>A. Black</span>
+                        <span onClick={() => handleTeste()}>A. Black</span>
                         <span>B. Yellow</span>
                         <span>C. White</span>
                         <span>D. Blue</span>
-
                     </div>
                 </ShowQuestion>
                 <ListPlayers>
