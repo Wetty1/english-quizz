@@ -9,23 +9,35 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 
+import uuidv4 from 'uuid';
+
+
 @WebSocketGateway({ namespace: '/room' })
 export class AppGateway
-  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
-{
+  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
   private logger: Logger = new Logger('AppGateway');
 
   private form = {
     1245: {
-      title: 'arroz',
+      title: 'teste',
       timeToResponse: 5,
       questionAct: 0,
+      questionInFocus: false,
       questions: [
         {
           alternatives: [],
           correctAlternative: 0,
           question: 'Which is the sky color?',
         },
+      ],
+      listUsers: [
+        {
+          id: '',
+          nickname: '',
+          responses: [
+
+          ]
+        }
       ],
     },
   };
@@ -37,6 +49,16 @@ export class AppGateway
   }
 
   handleDisconnect(client: Socket) {
+    const rooms = Object.keys(this.form);
+    for (var room of rooms) {
+      this.form[room].listUsers.map(user => {
+        if (user.id === client.id) {
+          console.log(user)
+          this.form[room].listUsers = this.form[room].listUsers.slice(this.form[room].listUsers.indexOf(user), 1)
+        }
+      })
+      this.wss.to(room).emit('users', this.form[room].listUsers);
+    }
     this.logger.log(`Client disconnected: ${client.id}`);
   }
 
@@ -44,18 +66,32 @@ export class AppGateway
     this.logger.log(`Client connected: ${client.id}`);
   }
 
-  @SubscribeMessage('msgToServer')
-  handleMessage(client: Socket, text: string): void {
-    console.log(text);
-    this.wss.emit('success', text);
-    // return { event: 'msgToClient', data: text };
+  @SubscribeMessage('enterInRoom')
+  handleEnterInRoom(client: Socket, room: string) {
+    client.emit('success', 'connected in room: ' + room);
+    client.join(room);
+    this.form[room].listUsers.push({ id: client.id, name: 'Wesley', responses: [] });
+    if (!this.form[room]) {
+      console.log("Sala não existe");
+    } else {
+      // Syncronize
+      this.logger.log(this.form[room].title);
+      client.emit('title', this.form[room].title);
+      client.emit('status', this.form[room].questionAct);
+      this.wss.to(room).emit('users', this.form[room].listUsers);
+    }
+    // if (this.form[room]) {
+    //   client.emit('')
+    // }
   }
 
-  @SubscribeMessage('enterOrCreateRoom')
-  handleEnterOrCreateRoom(client: Socket, room: string): void {
+  @SubscribeMessage('createRoom')
+  handleCreateRoom(client: Socket, room: string, objectCreate: any): void {
+    const newIdRoom = uuidv4;
+    this.form[newIdRoom] = objectCreate;
     client.join(room);
-    this.logger.log(`the client ${client.id} join in the room ${room}`);
     client.emit('success', 'connected in room: ' + room);
+    this.logger.log(`the client ${client.id} join in the room ${room}`);
     if (this.form[room].title) {
       client.emit('title', this.form[room].title);
     }

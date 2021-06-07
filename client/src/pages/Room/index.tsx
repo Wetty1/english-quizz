@@ -9,21 +9,27 @@ import {
 
 import { ioRoom as io } from "../../services/socket";
 
+interface User {
+    name: string;
+}
+
 const Room: React.FC = () => {
     const [title, setTitle] = useState('');
     const [currentPath, setCurrentPath] = useState('');
+    const [users, setUsers] = useState<User[]>([] as User[]);
 
     const id_room = document.location.pathname.split('/')[2];
 
     useEffect(() => {
         console.log(id_room.toString());
-        io.emit('enterOrCreateRoom', id_room.toString());
+        io.emit('enterInRoom', id_room.toString());
         io.on('success', (msg: string) => {
             console.log(msg);
         })
         io.on('title', (msg: string) => {
             setTitle(msg);
         })
+        io.on('users', (usersReceived: User[]) => setUsers(usersReceived));
     }, [])
 
     const handleTeste = useCallback(
@@ -52,15 +58,11 @@ const Room: React.FC = () => {
                     </div>
                 </ShowQuestion>
                 <ListPlayers>
-                    <div>
-                        <span>Wesley</span>
-                    </div>
-                    <div>
-                        <span>Lucas</span>
-                    </div>
-                    <div>
-                        <span>Alex</span>
-                    </div>
+                    {users.map(user => (
+                        <div key={user.name}>
+                            <span>{user.name}</span>
+                        </div>
+                    ))}
                 </ListPlayers>
             </Content>
         </Container>
