@@ -3,6 +3,8 @@ import { Container, Content, Header, QuestionsContent, AddQuestionsContent, AddA
 import TextField from "../../components/Textfield";
 import { Form } from '@unform/web';
 import { FiPlusCircle } from 'react-icons/fi'
+import { useHistory } from 'react-router';
+import { useRoom } from '../../hooks/room';
 
 interface FormChallenge {
     title: string;
@@ -17,7 +19,8 @@ interface Question {
 }
 
 const Constructor: React.FC = () => {
-
+    const history = useHistory();
+    const { sendCreate } = useRoom();
     const [formChallenge, setformChallenge] = useState<FormChallenge>({
         title: "",
         timeToResponse: 0,
@@ -36,17 +39,12 @@ const Constructor: React.FC = () => {
         ],
     })
 
-    useEffect(() => {
-    }, [])
+    useEffect(() => {}, [])
 
     const handleOnChange = useCallback(
         (event) => {
             const name = event.target.name;
             const value = event.target.value;
-            console.log({
-                ...formChallenge,
-                [name]: value,
-            });
             setformChallenge({
                 ...formChallenge,
                 [name]: value,
@@ -130,8 +128,8 @@ const Constructor: React.FC = () => {
 
     const handleOnSubmit = useCallback(
         async (data) => {
-            console.log(formChallenge);
-            return data
+            sendCreate(formChallenge);
+            return history.push('/room')
         },
         [formChallenge],
     );
