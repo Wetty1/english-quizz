@@ -10,26 +10,44 @@ export const Container = styled.div`
 `;
 
 export const Header = styled.header`
+    position: sticky;
+    top: 0;
+    left: 0;
     padding: 8px;
     margin: auto 0px;
-    top: 0px;
-    background: #0001;
+    background: #FFFFFF;
+    box-sizing: border-box;
+    box-shadow: inset 0 -0.125rem #f2f2f2;
+    transition: transform 0.3s, -webkit-transform 0.3s;
+    z-index: 12;
 
-    span {
+    h1 {
         font-family: 'Odibee Sans', cursive;
-        font-weight: 400;
         font-size: 2em;
+        color: #333;
+        font-weight: 700;
+        text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
     }
 `;
 
 export const Content = styled.div`
-    margin: 5% auto;
+    margin: 3% auto;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
     align-items: center;
 
     form {
+      width: 90%;
+      max-width: 768px;
+      padding: 20px 30px;
+      border-radius: 10px;
+
+      @media(max-width: 580px) {
+        width: 100%;
+      }
+
         >div {
             margin: 15px auto;
             >span {
@@ -42,7 +60,7 @@ export const Content = styled.div`
 `;
 
 export const QuestionsContent = styled.div`
-    min-width: 550px;
+    /* min-width: 550px; */
     border: solid #4444 1px;
 
     >div {
@@ -52,10 +70,9 @@ export const QuestionsContent = styled.div`
 `
 
 export const AddQuestionsContent = styled.div`
-    margin: 10px;
-    height: 60px;
-    min-width: 550px;
-    padding: 15px 15px;
+    margin: 15px;
+    /* min-width: 550px; */
+    padding: 5px;
     background: #07f3;
     border: solid #07f9 1px;
     display: flex;
@@ -67,8 +84,6 @@ export const AddQuestionsContent = styled.div`
 `
 
 export const AddAlternativeContent = styled.div`
-    margin: 5px;
-    min-width: 350px;
     padding: 5px;
     background: #0f73;
     border: solid #0f79 1px;
