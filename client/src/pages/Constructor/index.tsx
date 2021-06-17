@@ -193,7 +193,7 @@ const Constructor: React.FC = () => {
                                                 <TextField
                                                     name={`answer-${indexQuest}-${indexAltern}`}
                                                     width="40"
-                                                    placeholder={`Answer ${letter})`}
+                                                    // placeholder={`Answer ${letter})`}
                                                     onChange={event => handleOnChangeAlternative(event)}
                                                     value={formChallenge.questions[indexQuest].alternatives[indexAltern]}
 
