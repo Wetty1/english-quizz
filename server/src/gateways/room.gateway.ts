@@ -46,29 +46,35 @@ export class AppGateway
     this.logger.log(`Client disconnected: ${client.id}`);
   }
 
-  handleConnection(client: Socket, ...args: any[]) {
+  handleConnection(client: Socket, args: any[]) {
     this.logger.log(`Client connected: ${client.id}`);
   }
 
   @SubscribeMessage('enterInRoom')
-  handleEnterInRoom(client: Socket, args: any[]) {
-    const thisRoom = this.rooms[args[0]];
+  handleEnterInRoom(client: Socket, [idroom, username]: any[]) {
+    console.log(idroom, username);
+    const thisRoom = this.rooms[idroom];
     if (!thisRoom) {
       console.log('Sala não existe');
       client.emit('roomnotfound');
       return;
     }
-    client.join(args[0]);
-    client.emit('success', 'connected in room: ' + args[0]);
+    client.join(idroom);
+    client.emit('success', 'connected in room: ' + idroom);
+
+    let template = []
+    for (let i = 0; i < thisRoom.questions.length; i++) {
+        template.push(-1)
+    }
 
     thisRoom.listUsers.push({
       id: client.id,
-      name: args[1],
-      responses: [],
+      name: username,
+      responses: template,
     });
 
     // Syncronize
-    this.wss.to(args[0]).emit('users', thisRoom.listUsers);
+    this.wss.to(idroom).emit('users', thisRoom.listUsers);
     client.emit('title', thisRoom.title);
     client.emit('status', thisRoom.status);
   }
@@ -115,16 +121,30 @@ export class AppGateway
 
   @SubscribeMessage('nextQuestion')
   handleNextQuestion(client: Socket, room: any) {
-    console.log('room ' + room);
     const thisRoom = this.rooms[room];
     const userFinded = thisRoom.listUsers.find((user) => user.id === client.id);
+    
+    if (!userFinded) {
+        console.log(thisRoom.listUsers);
+        return
+    };
 
-    if (!userFinded) return;
-    if (thisRoom.listUsers.indexOf(userFinded) !== 0) return;
-
+    const isFirstUser = thisRoom.listUsers.indexOf(userFinded) !== 0;
+    if (isFirstUser) {
+        console.log('is not first');
+        return
+    };
+    
     const newCurrentQuestion = thisRoom.currentQuestion + 1;
+    console.log('number next question: ' + newCurrentQuestion + '/' + (thisRoom.questions.length - 1));
+    
+    if (newCurrentQuestion >= thisRoom.questions.length){
+        this.wss.to(room).emit('status', 'Finished');
+        console.log(thisRoom.listUsers)
+        return;
+    }
+    
     this.rooms[room].currentQuestion = newCurrentQuestion;
-
     this.wss
       .to(room)
       .emit(
@@ -133,5 +153,32 @@ export class AppGateway
         thisRoom.questions[newCurrentQuestion].alternatives,
       );
     this.wss.to(room).emit('status', 'InQuestion');
+    setTimeout(() => {
+        this.wss.to(room).emit('status', 'Transition');
+
+        // verifica se todos responderam, quem não respondeu preencha-se com -1
+        return;
+    }, thisRoom.timeToResponse * 1000)
+  }
+
+  @SubscribeMessage('responseQuestion')
+  handleReponseQuestion(client: Socket, [room, index_response]: any) {
+    console.log('response: ', room, index_response);
+    const thisRoom = this.rooms[room];
+
+    let index_user = null;
+
+    thisRoom.listUsers.forEach((user, index, _) => {
+        console.log(user.id, client.id);
+        if (user.id === client.id) {
+            index_user = index;
+        }
+    })
+
+    if (!index_user) return;
+
+    console.log(index_user);
+
+    this.rooms[room].listUsers[index_user].responses[thisRoom.currentQuestion] = index_response;
   }
 }

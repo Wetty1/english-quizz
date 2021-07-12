@@ -3,19 +3,20 @@ import {
     Container,
     Content,
     Header,
-    ListPlayers,
-    ShowQuestion,
+    ColumnInfo,
+    MainContent,
 } from './styles'
 
 import { ioRoom as io } from "../../services/socket";
 import { useHistory } from 'react-router-dom';
 import { useRoom } from '../../hooks/room';
+import { makeid } from '../../utils/make-id-guess';
 
 interface User {
     name: string;
 }
 
-type IStatus = 'InQuestion' | 'WaitStart' | 'Transition' | 'Fineshed';
+type IStatus = 'InQuestion' | 'WaitStart' | 'Transition' | 'Finished' | 'Answered';
 
 
 const Room: React.FC = () => {
@@ -27,9 +28,9 @@ const Room: React.FC = () => {
     const [users, setUsers] = useState<User[]>([] as User[]);
     const [currentQuestion, setCurrentQuestion] = useState<string>('');
     const [alternatives, setAlternatives] = useState<string[]>([]);
+    const [username, setUsername] = useState('');
 
     useEffect(() => {
-        let name: string | null = '';
         const id_room = document.location.pathname.split('/')[2];
         console.log(id_room);
         setIdRoom(document.location.pathname.split('/')[2])
@@ -38,8 +39,10 @@ const Room: React.FC = () => {
         if (roomData.title) {
             console.log(roomData);
             io.emit('createRoom', roomData);
+            setUsername('admin')
         } else if (!!id_room) {
-            name = prompt('Diga-nos qual é o seu nome');
+            let name = prompt('Diga-nos qual é o seu nome') || 'guess_' + makeid(3)
+            setUsername(name);
             io.emit('enterInRoom', id_room.toString(), name);
         } else {
             return history.push('/');
@@ -60,7 +63,7 @@ const Room: React.FC = () => {
                 case 'Transition':
                     sendStatus = newStatus;
                     break;
-                case 'Fineshed':
+                case 'Finished':
                     sendStatus = newStatus;
             }
             console.log('status: ' + sendStatus);
@@ -77,7 +80,10 @@ const Room: React.FC = () => {
         io.on('roomnotfound', () => {
             return history.push('/')
         })
-        io.on('users', (usersReceived: User[]) => setUsers(usersReceived));
+        io.on('users', (usersReceived: User[]) => {
+            console.log(usersReceived);
+            setUsers(usersReceived)
+        });
         window.addEventListener("beforeunload", function (e) {
             let confirmationMessage = "o/";
             (e || window.event).returnValue = confirmationMessage; //Gecko + IE
@@ -105,10 +111,11 @@ const Room: React.FC = () => {
         [],
     );
 
-    const handletoAskQuestion = useCallback(
+    const handleToAnswerQuestion = useCallback(
         (index) => {
-            console.log('ask index: '+index);
-            io.emit('ask', index);
+            console.log('ask index: '+ index);
+            io.emit('responseQuestion', document.location.pathname.split('/')[2],index);
+            setStatus('Answered');
         },
         [],
     );
@@ -119,10 +126,7 @@ const Room: React.FC = () => {
                 <h1 className="text-title">Room {title}</h1>
             </Header>
             <Content>
-                <ShowQuestion>
-                <section >
-                    <button onClick={handleNextQuestion}>{status === 'WaitStart' ? 'Start' : 'Next Question'}</button>
-                </section>
+                <MainContent>
                     {status === 'WaitStart' ? <>
                         <h1>
                             Hello! Welcome to the quizz!
@@ -136,21 +140,56 @@ const Room: React.FC = () => {
                         </h2>
                         <div>
                             {alternatives.map((alternative, index)  => (
-                                <span key={`alternative-${index}`} onClick={() => handletoAskQuestion(index)}>{alternative}</span>
+                                <span key={`alternative-${index}`} onClick={() => handleToAnswerQuestion(index)}>{alternative}</span>
                             ))}
                         </div>
                     </> : null}
-                </ShowQuestion>
-                <ListPlayers>
-                    {users.map(user => (
-                        <div key={user.name}>
-                            <span>{user.name}</span>
+                    {status === 'Transition' ? <> 
+                        <h2>
+                            Aguardando a proxima pergunta...
+                        </h2>
+                    </> : null}
+                    {status === 'Finished' ? <> 
+                        <h2>
+                            Results to Quizz
+                        </h2>
+                        <div>
+                            here will stay results of users
                         </div>
-                    ))}
-                </ListPlayers>
+                    </> : null}
+                    {status === 'Answered' ? <> 
+                        <h2>
+                            {currentQuestion}
+                        </h2>
+                        <div>
+                            {alternatives.map((alternative, index)  => (
+                                <span key={`alternative-${index}`} style={{color: 'gray'}} onClick={() => {}}>{alternative}</span>
+                            ))}
+                        </div>
+                    </> : null}
+                </MainContent>
+                <ColumnInfo>
+                    <div>
+                        {users.map(user => (
+                            <div key={user.name}>
+                                <span className={user.name === username ? "itsme" : ""}>{user.name}</span>
+                            </div>
+                        ))}
+                    </div>
+                    {username === 'admin' ? <>
+                        <div className="admin-control">
+                            <h2>Admin Controls</h2>
+                            {status !== 'InQuestion' ? 
+                                <div>
+                                    <button onClick={handleNextQuestion}>{status === 'WaitStart' ? 'Start' : 'Next Question'}</button>
+                                </div>
+                            : null}
+                        </div>
+                    </> : null}
+                </ColumnInfo>
             </Content>
         </Container>
     )
-}
+                        }
 
 export default Room

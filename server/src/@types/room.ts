@@ -2,7 +2,7 @@ export interface RoomDetails {
   title: string;
   timeToResponse: number;
   currentQuestion: number;
-  status: 'InQuestion' | 'WaitStart' | 'Transition' | 'Fineshed';
+  status: 'InQuestion' | 'WaitStart' | 'Transition' | 'Finished';
   questions: Questions[];
   listUsers: User[];
 }

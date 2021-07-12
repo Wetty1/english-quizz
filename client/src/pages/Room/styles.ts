@@ -11,6 +11,7 @@ export const Container = styled.div`
 
 export const Header = styled.header`
     padding: 8px;
+    height: 8vh;
     margin: auto 0px;
     top: 0px;
     color: white;
@@ -25,10 +26,10 @@ export const Content = styled.div`
     align-items: center;
 `;
 
-export const ShowQuestion = styled.div`
+export const MainContent = styled.div`
     background: #3C3B6E;
-    width: 80%;
-    height: 90vh;
+    width: 83%;
+    height: 92vh;
     color: white;
     display: flex;
     flex-direction: column;
@@ -48,13 +49,29 @@ export const ShowQuestion = styled.div`
     }
 `
 
-export const ListPlayers = styled.div`
+export const ColumnInfo = styled.div`
     max-width: 350px;
-    width: 20%;
-    height: 90vh;
+    width: 17%;
+    height: 92vh;
+    display: flex;
+    justify-content: stretch;
+    flex-direction: column;
 
     >div {
-        margin: 10px 10px;
+        height: 80%;
+
+        >div {
+            margin: 10px 10px;
+
+            .itsme {
+                color: blue;
+            }
+        }
+    }
+
+    .admin-control {
+        height: 20%;
+        background-color: yellow;
     }
 `
 

@@ -22,8 +22,8 @@ const Constructor: React.FC = () => {
     const history = useHistory();
     const { sendCreate } = useRoom();
     const [formChallenge, setformChallenge] = useState<FormChallenge>({
-        title: "",
-        timeToResponse: 0,
+        title: "About Earth",
+        timeToResponse: 6,
         questions: [
             {
                 question: "Which is the sky color?",
@@ -34,8 +34,17 @@ const Constructor: React.FC = () => {
                     "Blue",
                     "Yellow",
                 ]
-            }
-
+            },
+            {
+                question: "the Solar System pertence which galaxy?",
+                correctAlternative: 3,
+                alternatives: [
+                    "Andromeda Galaxy",
+                    "Cigar Galaxy",
+                    "Backward Galaxy",
+                    "the Milky Way Galaxy",
+                ]
+            },
         ],
     })
 
